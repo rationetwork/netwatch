@@ -7,34 +7,47 @@ notifier    = require('node-notifier'),
 path        = require('path'),
 debug       = require('debug')('netwatch');
 
-var statuses      = {
+var statuses       = {
         down: 0,
         virgin: 1,
         talktalk: 2
     },
-    validIPs      = {
+    validIPs       = {
         virgin: '82.44.176.218',
         talktalk: '79.78.13.85'
     },
-    currentStatus = statuses.down;
+    timesFailed    = 0,
+    maxTimesFailed = 2,
+    currentStatus  = statuses.down;
 
 (function netwatch() {
     debug('About to make request...');
 
     request({
-        url: 'http://api.ipify.org'
+        url: 'http://api.ipify.org',
+        timeout: 15000
     }, function (err, response, body) {
         debug('Request finished');
 
-        var newStatus,
+        var newStatus = currentStatus,
             message,
             icon;
 
         if (err) {
-            newStatus = statuses.down;
-            message = 'Connection lost...';
-            icon = path.join(__dirname, 'img/disconnected.png');
+            if (timesFailed < maxTimesFailed) {
+                timesFailed++;
+
+                debug('Failed ' + timesFailed + ' times');
+            } else {
+                debug('Hit max fail times of ' + maxTimesFailed);
+
+                newStatus = statuses.down;
+                message = 'Connection lost...';
+                icon = path.join(__dirname, 'img/disconnected.png');
+            }
         } else {
+            timesFailed = 0;
+
             switch (body) {
                 case validIPs.virgin:
                     newStatus = statuses.virgin;
