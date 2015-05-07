@@ -2,10 +2,16 @@
  * Created by Chris Cheshire on 07/05/15.
  */
 
-var request = require('request'),
-notifier    = require('node-notifier'),
-path        = require('path'),
-debug       = require('debug')('netwatch');
+var request    = require('request'),
+notifier       = require('node-notifier'),
+path           = require('path'),
+debug          = require('debug')('netwatch'),
+WindowsBalloon = require('node-notifier').WindowsBalloon
+    ;
+
+var windowsNotifier = new WindowsBalloon({
+    withFallback: true // Try Windows 8 and Growl first?
+});
 
 var statuses       = {
         down: 0,
@@ -73,11 +79,23 @@ var statuses       = {
         if (newStatus !== currentStatus) {
             console.log('Current message: ', message);
 
-            notifier.notify({
-                icon: icon,
-                title: 'Netwatch',
-                message: message
-            });
+            if (process.platform === 'win32') {
+                windowsNotifier.notify({
+                    title: 'Netwatch',
+                    message: message,
+                    sound: true,
+                    time: 10000, // How long to show balloons in ms
+                    wait: false // if wait for notification to end
+                });
+            } else {
+                notifier.notify({
+                    icon: icon,
+                    title: 'Netwatch',
+                    sound: true,
+                    wait: false,
+                    message: message
+                });
+            }
 
             currentStatus = newStatus;
         }
