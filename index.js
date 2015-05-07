@@ -58,6 +58,8 @@ var statuses      = {
         debug('Current status: ', currentStatus);
 
         if (newStatus !== currentStatus) {
+            console.log('Current message: ', message);
+
             notifier.notify({
                 icon: icon,
                 title: 'Netwatch',
